@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 
 project(Script)
-add_executable(Host Main.cpp)
+add_executable(Host Main.cpp Hooks.cpp)
 target_link_libraries(Host -ldl)
 
 add_subdirectory(pybind11)

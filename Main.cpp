@@ -3,9 +3,11 @@
 #include <dlfcn.h>
 #include <assert.h>
 
+#include "hooks.h"
+
 void init_python() {
     printf("initializing python...\n");
-    void *python = dlopen("./libpython.so", RTLD_LAZY);
+    void *python = dlopen("./libpython.so", RTLD_NOW);
     if (!python) {
         fprintf(stderr, "%s\n", dlerror());
         exit(-1);
@@ -19,6 +21,8 @@ void init_python() {
     printf("done\n");
 }
 
+static Hook<int, int> AwesomeHook("AwesomeHook");
+
 int main() {
 
     init_python();
@@ -30,6 +34,9 @@ int main() {
         switch (c) {
         case 'q':
             return 0;
+        case 'a':
+            AwesomeHook.emit(2, 3);
+            break;
         }
     }
 }
