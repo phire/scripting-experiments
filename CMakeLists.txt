@@ -4,6 +4,9 @@ project(Script)
 add_executable(Host Main.cpp Hooks.cpp)
 target_link_libraries(Host -ldl)
 
+target_compile_options(Host PRIVATE "-fvisibility=hidden")
+target_link_options(Host PRIVATE "-rdynamic")
+
 add_subdirectory(pybind11)
 add_library(python SHARED Python.cpp)
 target_link_libraries(python PRIVATE pybind11::embed)

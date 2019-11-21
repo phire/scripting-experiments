@@ -8,7 +8,7 @@
 
 class HookBase {
 public:
-     virtual void Register(void *hook, void *data) {};
+     virtual void Register(void *callback, void *data) = 0;
 
      std::string getName() { return name; }
 
@@ -19,12 +19,14 @@ protected:
     static void registerHook(HookBase *hook);
 };
 
+#define export __attribute__ ((visibility ("default")))
+
 
 template <typename... Args>
 class Hook : public HookBase {
 public:
-    Hook(std::string name) {
-        this->name = name;
+    Hook(std::string Name) {
+        this->name = Name;
         registerHook(this);
     }
 
@@ -37,12 +39,13 @@ public:
         }
     }
 
-    void Register(void(*hook)(void *, Args...), void *data) {
-        hooks.push_back(std::make_tuple(hook, data));
+    void Register(void(*callback)(void *, Args...), void *data) {
+        printf("registered %x %x", callback, data);
+        hooks.push_back(std::make_tuple(callback, data));
     }
 
-    virtual void Register(void *hook, void *data) {
-        Register(reinterpret_cast<void(*)(void *, Args...)>(hook), data);
+    virtual void Register(void *callback, void *data) {
+        Register(reinterpret_cast<void(*)(void *, Args...)>(callback), data);
     }
 
 private:

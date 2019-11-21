@@ -7,7 +7,7 @@
 
 void init_python() {
     printf("initializing python...\n");
-    void *python = dlopen("./libpython.so", RTLD_NOW);
+    void *python = dlopen("./libpython.so", RTLD_NOW | RTLD_GLOBAL);
     if (!python) {
         fprintf(stderr, "%s\n", dlerror());
         exit(-1);
