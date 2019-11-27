@@ -6,10 +6,10 @@
 
 template<typename T>
 std::string reflect_type() {
-    if constexpr (std::is_class<T>::value) {
-        // 
-        return std::string("class<") + std::to_string(typeid(T).hash_code()) + ", " + typeid(T).name() + ">";
-    } 
+
+    if constexpr(std::is_same<T, std::string>::value) {
+        return "string";
+    }
     if constexpr (std::is_integral<T>::value) {
         constexpr size_t width = std::numeric_limits<T>::digits;
         if constexpr(std::is_signed<T>::value) {
@@ -26,8 +26,11 @@ std::string reflect_type() {
             return "double";
         }
     }
-    if constexpr(std::is_same<T, std::string>::value) {
-        return "string";
+    if constexpr (std::is_class<T>::value) {
+        // These class names are internal and not consistent between builds
+        // (or potentially even launches)
+        // They should never be exposed externally.
+        return std::string("class<") + std::to_string(typeid(T).hash_code()) + ", " + typeid(T).name() + ">";
     }
 }
 

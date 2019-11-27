@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <cstdint>
 #include <functional>
+#include <fmt/format.h>
 
 #include "reflect.h"
 
@@ -41,13 +42,13 @@ public:
         for (auto &hook : hooks) {
             auto fn = std::get<0>(hook);
             auto data = std::get<1>(hook);
-            printf("executing hook %llx (%llx)\n", std::get<0>(hook), std::get<1>(hook));
+            fmt::print("executing hook {:p} ({:p})\n", (void*)std::get<0>(hook), std::get<1>(hook));
             fn(data, args...);
         }
     }
 
     void Register(void(*callback)(void *, Args...), void *data) {
-        printf("registered %x %x", callback, data);
+        fmt::print("registered {:p} {:p}\n", (void*)callback, data);
         hooks.push_back(std::make_tuple(callback, data));
     }
 
@@ -67,6 +68,7 @@ struct hook_data {
 
 void registerHook(HookBase *hook);
 bool initHooks();
+std::string generate_json_schema();
 
 // This is a helper class just handle static initialization
 class _Exporter {

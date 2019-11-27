@@ -22,23 +22,26 @@ void init_python() {
     printf("done\n");
 }
 
-struct ccc {
+struct TestStructPleaseIgnore {
     std::string foo;
     std::string bar;
 };
 
-static Hook<int, int, ccc> AwesomeHook("AwesomeHook");
+static Hook<int, int, TestStructPleaseIgnore> AwesomeHook("AwesomeHook");
 EXPORT_HOOK(AwesomeHook);
 
-EXPORT_STRUCT(ccc);
-EXPORT_STRUCT_MEMBER(ccc, foo);
-EXPORT_STRUCT_MEMBER(ccc, bar);
+EXPORT_STRUCT(TestStructPleaseIgnore);
+EXPORT_STRUCT_MEMBER(TestStructPleaseIgnore, foo);
+EXPORT_STRUCT_MEMBER(TestStructPleaseIgnore, bar);
 
 int main() {
     if (!initHooks()) {
         printf("Error initializing hooks\n");
         return -1; 
     }
+
+    fmt::print("{}", generate_json_schema());
+    return 0;
 
     init_python();
 

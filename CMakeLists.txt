@@ -1,8 +1,14 @@
 cmake_minimum_required(VERSION 3.10)
 
 project(Script)
+
+add_subdirectory(fmt)
+
+
 add_executable(Host Main.cpp Hooks.cpp)
 target_link_libraries(Host -ldl)
+target_link_libraries(Host fmt::fmt)
+
 
 target_compile_options(Host PRIVATE "-fvisibility=hidden")
 target_link_options(Host PRIVATE -rdynamic)

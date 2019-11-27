@@ -50,7 +50,7 @@ struct StructExporter : public StructBase {
 template<typename T, typename U>
 struct StructMember : public StructMemberBase {
     using CType = typename derrive_c_type<T>::Type;
-    StructMember(StructExporter<U> exporter, size_t offset, std::string name) {
+    StructMember(StructExporter<U> &exporter, size_t offset, std::string name) {
         Name = name;
         Offset = offset;
         Size = sizeof(T);

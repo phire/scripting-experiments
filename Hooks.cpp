@@ -2,6 +2,8 @@
 #include "structs.h"
 
 #include <map>
+#include <fmt/format.h>
+
 
 std::string fn_list;
 
@@ -24,7 +26,7 @@ std::vector<HookBase *>& all_hooks() {
 }
 
 void registerHook(HookBase *hook) {
-    printf("Registered hook %s\n", hook->getName().c_str());
+    fmt::print("Registered hook {}\n", hook->getName());
     all_hooks().push_back(hook);
 }
  
@@ -43,6 +45,7 @@ bool initHooks() {
 
         auto end = std::remove_if(structs.begin(), structs.end(), [&](auto const *s) {
                 for (auto *member : s->members ) {
+                    fmt::print("{} {}\n", member->Name, member->Type);
                     if (types.find(member->Type) == types.end()) {
                         unknown_type = s->Name + "." + member->Name;
                         unknown_type = member->Type; // Try to provide some helpful logs
@@ -55,7 +58,7 @@ bool initHooks() {
         
         if (end == structs.end()) {
             // The number of structs didn't decrease 
-            printf("Couldn't initialize hooks: Struct Member %s depends on unknown type %s\n", unknown_type_name.c_str(), unknown_type.c_str());
+            fmt::print("Couldn't initialize hooks: Struct Member {} depends on unknown type {}\n", unknown_type_name, unknown_type);
             return false;
         }
 
@@ -70,12 +73,62 @@ bool initHooks() {
     for (auto *hook : all_hooks()) {
         for (auto &arg : hook->arg_types) {
             if (types.find(arg) == types.end()) {
-                printf("Couldn't initialize hooks: %s arg depends on unknown type %s\n", hook->name.c_str(), arg.c_str());
+                fmt::print("Couldn't initialize hooks: {} arg depends on unknown type {}\n", hook->name, arg);
                 return false;
             }
         }
     }
     return true;
+}
+
+std::string get_type_name(std::string type_id) {
+    if (types[type_id] == nullptr)
+        return type_id;
+    return types[type_id]->Name;
+}
+
+std::string generate_json_schema() {
+    std::string str = "{\n\t\"types\": {\n";
+
+    for (auto const &[type_id, info] : types) {
+        std::string name(type_id);
+        if (info) {
+            name = info->Name;
+        }
+        str += fmt::format("\t\t\"{}\": {{", name);
+
+        if (info) {
+            str += "\n";
+            str += fmt::format("\t\t\t\"total_size\": {},\n", info->Size);
+            str += fmt::format("\t\t\t\"members\": {{\n");
+            for (auto const &member : info->members) {
+                str += fmt::format("\t\t\t\t\"{}\": {{\n", member->Name);
+                str += fmt::format("\t\t\t\t\t\"type\": \"{}\",\n", get_type_name(member->Type));
+                str += fmt::format("\t\t\t\t\t\"size\": {},\n", member->Size);
+                str += fmt::format("\t\t\t\t\t\"offset\": {}\n", member->Offset);
+                str += fmt::format("\t\t\t\t}},\n", member->Name);
+            }
+            str += fmt::format("\t\t\t}}\n");
+
+            str += "\t\t";
+        }
+
+        str += "},\n";
+    }
+    str += "\t},\n";
+    str += "\t\"hooks\": {\n";
+
+    for (auto const *hook : all_hooks()) {
+        str += fmt::format("\t\t\"{}\": [\n", hook->name);
+        for (auto const &arg : hook->arg_types) {
+            str += fmt::format("\t\t\t\"{}\",\n", get_type_name(arg));
+        }
+        str += "\t\t],\n";
+    }
+
+    str += "\t}\n";
+
+    return str + "}\n";
 }
 
 extern "C" {
@@ -98,7 +151,7 @@ export void register_hook(char * hook_name, void *callback, void *data) {
             return;
         }
     }
-    printf("hook not found for '%s'\n", name.c_str());
+    fmt::print("hook not found for '{}'\n", name);
 }
 
 }
