@@ -21,13 +21,20 @@ void init_python() {
     printf("done\n");
 }
 
-static Hook<int, int> AwesomeHook("AwesomeHook");
+struct ccc {
+    std::string foo;
+    std::string bar;
+};
+
+static Hook<int, int, ccc> AwesomeHook("AwesomeHook");
+EXPORT_HOOK(AwesomeHook);
 
 int main() {
 
     init_python();
 
     printf("Waiting:\n");
+    printf("%s\n", AwesomeHook.getType().c_str());
 
     int c;
     while ((c = getchar())) {
@@ -35,7 +42,7 @@ int main() {
         case 'q':
             return 0;
         case 'a':
-            AwesomeHook.emit(2, 3);
+            AwesomeHook.emit(2, 3, {});
             break;
         }
     }

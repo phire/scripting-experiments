@@ -5,7 +5,9 @@ add_executable(Host Main.cpp Hooks.cpp)
 target_link_libraries(Host -ldl)
 
 target_compile_options(Host PRIVATE "-fvisibility=hidden")
-target_link_options(Host PRIVATE "-rdynamic")
+target_link_options(Host PRIVATE -rdynamic)
+set_property(TARGET Host PROPERTY CXX_STANDARD 17)
+
 
 add_subdirectory(pybind11)
 add_library(python SHARED Python.cpp)
