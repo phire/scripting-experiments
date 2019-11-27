@@ -3,14 +3,6 @@
 #include <utility>
 #include "reflect.h"
 
-struct obj {
-    std::string name;
-
-    void printName() {
-        printf("name: %s\n", name.c_str());
-    }
-};
-
 struct StructInfo {
     std::string type;
 };
@@ -32,16 +24,27 @@ struct StructMemberBase {
     std::string Type;
 };
 
-template<typename T>
-struct StructExporter {
-    StructExporter(std::string name) {
+struct StructBase {
+    std::string Name;
+    std::string Type;
+    size_t Size;
+    std::vector<StructMemberBase*> members;
+};
 
+void registerStruct(StructBase *);
+
+template<typename T>
+struct StructExporter : public StructBase {
+    StructExporter(std::string name) {
+        Name = name;
+        Type = reflect_type<T>();
+        Size = sizeof(T);
+        registerStruct(this);
     }
 
     void registerMember(StructMemberBase *member) {
         members.push_back(member);
     }
-    std::vector<StructMemberBase*> members;
 };
 
 template<typename T, typename U>
@@ -71,8 +74,6 @@ struct StructMember : public StructMemberBase {
 template<typename T>
 struct StructMethod : public StructInfo {
 };
-
-
 
 #define EXPORT_STRUCT(ty) static StructExporter<ty> _##ty##_exporter( #ty );
 

@@ -13,19 +13,16 @@ class HookBase {
 public:
      virtual void Register(void *callback, void *data) = 0;
 
-     std::string getName() { return name; }
-     std::string getType() { 
-         return std::accumulate(arg_types.begin(), arg_types.end(), std::string(), 
-            [](const std::string& a, const std::string& b) -> std::string { 
-                return a + (a.length() > 0 ? "," : "") + b; 
-            } );
-      }
-
-protected:
     std::string name;
     std::vector<std::string> arg_types;
 
-    //static void registerHook(HookBase *hook, std::string name);
+    std::string getName() { return name; }
+    std::string getType() { 
+        return std::accumulate(arg_types.begin(), arg_types.end(), std::string(), 
+           [](const std::string& a, const std::string& b) -> std::string { 
+               return a + (a.length() > 0 ? "," : "") + b; 
+           } );
+    }
 };
 
 #define export __attribute__ ((visibility ("default")))
@@ -69,6 +66,7 @@ struct hook_data {
 };
 
 void registerHook(HookBase *hook);
+bool initHooks();
 
 // This is a helper class just handle static initialization
 class _Exporter {

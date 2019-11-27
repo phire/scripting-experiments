@@ -35,6 +35,10 @@ EXPORT_STRUCT_MEMBER(ccc, foo);
 EXPORT_STRUCT_MEMBER(ccc, bar);
 
 int main() {
+    if (!initHooks()) {
+        printf("Error initializing hooks\n");
+        return -1; 
+    }
 
     init_python();
 
