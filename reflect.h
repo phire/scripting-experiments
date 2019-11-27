@@ -1,14 +1,11 @@
 #pragma once
 
 #include <typeinfo>
-#include <map>
+#include <string>
+#include <vector>
 
-template<typename T, typename... Args>
+template<typename T>
 std::string reflect_type() {
-    if constexpr (sizeof...(Args)) {
-        return reflect_type<T>() + " " + reflect_type<Args...>();
-    }
-
     if constexpr (std::is_class<T>::value) {
         // 
         return std::string("class<") + std::to_string(typeid(T).hash_code()) + ", " + typeid(T).name() + ">";
@@ -23,40 +20,31 @@ std::string reflect_type() {
     }
     if constexpr(std::is_floating_point<T>::value) {
         if constexpr(std::is_same<T, float>::value) {
-            return ("float");
+            return "float";
         }
         if constexpr(std::is_same<T, double>::value) {
-            return ("double");
+            return "double";
         }
     }
     if constexpr(std::is_same<T, std::string>::value) {
-        return ("string");
+        return "string";
     }
 }
 
+template<typename Last>
+void reflect_types_inner(std::vector<std::string> &vec) { 
+    vec.push_back(reflect_type<Last>());
+}
 
-// constexpr auto reflect_type() {
-//     return reflect_type<T>() + " " + reflect_type<Args...>();
-// }
+template<typename First, typename Second, typename... Rest>
+void reflect_types_inner(std::vector<std::string> &vec) {
+    vec.push_back(reflect_type<First>());
+    reflect_types_inner<Second, Rest...>(vec);
+}
 
-/*
-constexpr auto map() {
-    return std::map<type_info, char *> {
-
-    }
-}*/
-/*
-
-template<typename T>
-constexpr auto reflect() {
-    auto t = typeid(T);
-
-    if (t == typeid(int32_t)) {
-        return "int32_t";
-    } else if (t == typeid(std::string)) {
-        return "string";
-    } else if (t == typeid(std::vector)) {
-        return "vector";
-    } else if (Is)
-    return "unknown";
-}*/
+template<typename T, typename... Args>
+std::vector<std::string> reflect_types() {
+    std::vector<std::string> vec;
+    reflect_types_inner<T, Args...>(vec);
+    return vec;
+}

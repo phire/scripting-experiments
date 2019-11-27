@@ -1,5 +1,6 @@
 #pragma once
 
+#include <numeric>
 #include <vector>
 #include <tuple>
 #include <stdio.h>
@@ -13,11 +14,16 @@ public:
      virtual void Register(void *callback, void *data) = 0;
 
      std::string getName() { return name; }
-     std::string getType() { return type; }
+     std::string getType() { 
+         return std::accumulate(arg_types.begin(), arg_types.end(), std::string(), 
+            [](const std::string& a, const std::string& b) -> std::string { 
+                return a + (a.length() > 0 ? "," : "") + b; 
+            } );
+      }
 
 protected:
     std::string name;
-    std::string type;
+    std::vector<std::string> arg_types;
 
     //static void registerHook(HookBase *hook, std::string name);
 };
@@ -31,7 +37,7 @@ public:
 
     Hook(std::string Name) {
         this->name = Name;
-        this->type = reflect_type<Args...>();
+        this->arg_types = reflect_types<Args...>();
     }
 
     void emit(Args... args) {
@@ -79,6 +85,6 @@ public:
         hook.Register(callback, data); \
     } \
 } \
-static _Exporter _##hook_exporter(&hook);
+static _Exporter _##hook##_exporter(&hook);
 
 //static __attribute__((__used__)) __attribute__((section("hookinfo"))) hook_data hook_info_##hook { &hook, #hook };

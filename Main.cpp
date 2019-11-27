@@ -4,6 +4,7 @@
 #include <assert.h>
 
 #include "hooks.h"
+#include "structs.h"
 
 void init_python() {
     printf("initializing python...\n");
@@ -28,6 +29,10 @@ struct ccc {
 
 static Hook<int, int, ccc> AwesomeHook("AwesomeHook");
 EXPORT_HOOK(AwesomeHook);
+
+EXPORT_STRUCT(ccc);
+EXPORT_STRUCT_MEMBER(ccc, foo);
+EXPORT_STRUCT_MEMBER(ccc, bar);
 
 int main() {
 
