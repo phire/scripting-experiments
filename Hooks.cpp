@@ -29,7 +29,7 @@ void registerHook(HookBase *hook) {
     fmt::print("Registered hook {}\n", hook->getName());
     all_hooks().push_back(hook);
 }
- 
+
 std::map<std::string, const StructBase *> types = {
     {"string", nullptr},
     {"int32_t", nullptr}
@@ -55,9 +55,9 @@ bool initHooks() {
                 return true;
             });
 
-        
+
         if (end == structs.end()) {
-            // The number of structs didn't decrease 
+            // The number of structs didn't decrease
             fmt::print("Couldn't initialize hooks: Struct Member {} depends on unknown type {}\n", unknown_type_name, unknown_type);
             return false;
         }
@@ -87,7 +87,14 @@ std::string get_type_name(std::string type_id) {
     return types[type_id]->Name;
 }
 
+std::string trim_last_comma(std::string str) {
+    // Assume last was ",\n"
+    return str.substr(0, str.size()-2) + '\n';
+}
+
 std::string generate_json_schema() {
+    // TODO: less janky json formatting.
+
     std::string str = "{\n\t\"types\": {\n";
 
     for (auto const &[type_id, info] : types) {
@@ -104,10 +111,11 @@ std::string generate_json_schema() {
             for (auto const &member : info->members) {
                 str += fmt::format("\t\t\t\t\"{}\": {{\n", member->Name);
                 str += fmt::format("\t\t\t\t\t\"type\": \"{}\",\n", get_type_name(member->Type));
-                str += fmt::format("\t\t\t\t\t\"size\": {},\n", member->Size);
+                // str += fmt::format("\t\t\t\t\t\"size\": {},\n", member->Size);
                 str += fmt::format("\t\t\t\t\t\"offset\": {}\n", member->Offset);
                 str += fmt::format("\t\t\t\t}},\n", member->Name);
             }
+            str = trim_last_comma(str);
             str += fmt::format("\t\t\t}}\n");
 
             str += "\t\t";
@@ -115,6 +123,8 @@ std::string generate_json_schema() {
 
         str += "},\n";
     }
+    str = trim_last_comma(str);
+
     str += "\t},\n";
     str += "\t\"hooks\": {\n";
 
@@ -123,8 +133,10 @@ std::string generate_json_schema() {
         for (auto const &arg : hook->arg_types) {
             str += fmt::format("\t\t\t\"{}\",\n", get_type_name(arg));
         }
+        str = trim_last_comma(str);
         str += "\t\t],\n";
     }
+    str = trim_last_comma(str);
 
     str += "\t}\n";
 
