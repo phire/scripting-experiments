@@ -1,6 +1,3 @@
-// #include <pybind11/embed.h> // everything needed for embedding
-// namespace py = pybind11;
-
 #include <nlohmann/json.hpp>
 using json = nlohmann::json;
 
@@ -10,74 +7,81 @@ using json = nlohmann::json;
 #include <Python.h>
 
 extern "C" {
-
-extern const char* list_hooks();
-extern const char* get_schema();
-
-extern void register_hook(char *name, void *callback, void *data);
+    const char* list_hooks();
+    const char* get_schema();
 }
 
-void callback(void *data, int a, int b) {
-    printf("Callback %i %i\n", a, b);
-}
+// PYBIND11_EMBEDDED_MODULE(cpp_module, m) {
+//     std::string schema(get_schema());
+//     json j = json::parse(schema);
 
-int add(int i, int j) {
-    return i + j;
-}
+//     for (const auto &[hook,args] : j["hooks"].items()) {
+//         void (*func)(void (*)(void*));
+//         func = (void (*)(void (*)(void*))) dlsym(RTLD_DEFAULT, ("attach_hook_" + hook).c_str());
+//         printf("%x\n", func);
+//         m.def(("attach_hook_" + hook).c_str(), func, ("attach to " + hook + " hook").c_str());
+//         printf("%s %s\n", hook.c_str(), args.dump().c_str());
+//     }
+// }
 
-PYBIND11_EMBEDDED_MODULE(cpp_module, m) {
-    std::string schema(get_schema());
-    json j = json::parse(schema);
 
-    for (const auto &[hook,args] : j["hooks"].items()) {
-        void (*func)(void (*)(void*));
-        func = (void (*)(void (*)(void*))) dlsym(RTLD_DEFAULT, ("attach_hook_" + hook).c_str());
-        printf("%x\n", func);
-        m.def(("attach_hook_" + hook).c_str(), func, ("attach to " + hook + " hook").c_str());
-        printf("%s %s\n", hook.c_str(), args.dump().c_str());
-    }
-}
+typedef struct {
+    PyObject_HEAD
+} events_object;
+
+static PyTypeObject eventsType = {
+    PyVarObject_HEAD_INIT(NULL, 0)
+    .tp_name = "dolphin.events",
+    .tp_basicsize = sizeof(events_object),
+    .tp_itemsize = 0,
+    .tp_flags = Py_TPFLAGS_DEFAULT,
+    .tp_doc = "doc string",
+    .tp_new = PyType_GenericNew,
+};
 
 static PyMethodDef EmbMethods[] = {
-    {"numargs", emb_numargs, METH_VARARGS,
-     "Return the number of arguments received by the process."},
+    //{"numargs", emb_numargs, METH_VARARGS,
+    // "Return the number of arguments received by the process."},
     {NULL, NULL, 0, NULL}
 };
 
-static PyModuleDef EmbModule = {
-    PyModuleDef_HEAD_INIT, "emb", NULL, -1, EmbMethods,
+static PyModuleDef DolphinModule = {
+    PyModuleDef_HEAD_INIT, "dolphin", NULL, -1, EmbMethods,
     NULL, NULL, NULL, NULL
 };
 
 static PyObject*
-PyInit_emb(void)
+PyInit_dolphin(void)
 {
-    return PyModule_Create(&EmbModule);
+    PyObject *m;
+    if (PyType_Ready(&eventsType) < 0)
+        return NULL;
+
+    m = PyModule_Create(&DolphinModule);
+    if (!m)
+        return NULL;
+
+    Py_INCREF(&eventsType);
+    if(PyModule_AddObject(m, "events", (PyObject *) &eventsType) < 0) {
+        Py_DECREF(&eventsType);
+        Py_DECREF(m);
+        return NULL;
+    }
+
+    return m;
 }
 
 extern "C" {
 
 void init() {
+    printf("%s\n", get_schema());
 
-    PyImport_AppendInittab("emb", &PyInit_emb);
+    PyImport_AppendInittab("dolphin", &PyInit_dolphin);
 
-    //py::scoped_interpreter guard{};
-
-    // py::print("Hello, World!");
-    // py::print(list_hooks());
-
-    // auto py_module = py::module::import("cpp_module");
-
-    // auto locals = py::dict("fmt"_a="{} + {} = {}", **py_module.attr("__dict__"));
-    // assert(locals["a"].cast<int>() == 1);
-    // assert(locals["b"].cast<int>() == 2);
-
-    // py::exec(R"(
-    //     import cpp_module
-
-    //     print(dir(cpp_module.attach_hook_AwesomeHook))
-    // )", py::globals());
-
+    Py_Initialize();
+    PyRun_SimpleString("import dolphin\n"
+                       "print(dir(dolphin))\n"
+                       "print(dir(dolphin.events))\n");
 }
 
 }

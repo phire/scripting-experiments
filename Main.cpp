@@ -27,6 +27,36 @@ struct TestStructPleaseIgnore {
     std::string bar;
 };
 
+template <typename... Args>
+struct Event {
+    
+};
+
+
+struct CpuContext {
+
+};
+EXPORT_STRUCT(CpuContext);
+EXPORT_STRUCT_NAME(CpuContextEvent, Event<CpuContext>);
+
+struct ControllerData {
+
+};
+EXPORT_STRUCT(ControllerData);
+EXPORT_STRUCT_NAME(ControllerDataEvent, Event<ControllerData>);
+
+struct Events {
+    Event<CpuContext> vsync;
+    Event<CpuContext> pc;
+    Event<ControllerData> controllerRead;
+};
+
+EXPORT_STRUCT(Events);
+EXPORT_STRUCT_MEMBER(Events, vsync);
+EXPORT_STRUCT_MEMBER(Events, pc);
+EXPORT_STRUCT_MEMBER(Events, controllerRead);
+
+
 static Hook<int, int, TestStructPleaseIgnore> AwesomeHook("AwesomeHook");
 EXPORT_HOOK(AwesomeHook);
 
@@ -35,6 +65,8 @@ EXPORT_STRUCT_MEMBER(TestStructPleaseIgnore, foo);
 EXPORT_STRUCT_MEMBER(TestStructPleaseIgnore, bar);
 
 int main() {
+
+    
     if (!initHooks()) {
         printf("Error initializing hooks\n");
         return -1; 

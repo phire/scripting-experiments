@@ -35,6 +35,8 @@ void registerStruct(StructBase *);
 
 template<typename T>
 struct StructExporter : public StructBase {
+    using Ty =  T;
+
     StructExporter(std::string name) {
         Name = name;
         Type = reflect_type<T>();
@@ -75,20 +77,23 @@ template<typename T>
 struct StructMethod : public StructInfo {
 };
 
-#define EXPORT_STRUCT(ty) static StructExporter<ty> _##ty##_exporter( #ty );
+#define EXPORT_STRUCT(ty) static StructExporter<ty> _##ty##_exporter( #ty )
+#define EXPORT_STRUCT_NAME(name, ty) static StructExporter<ty> _##name##_exporter( #name )
 
-#define EXPORT_STRUCT_MEMBER_READONLY(ty, m_ty) \
-    static StructMember<decltype(ty::m_ty), ty> \
-        _##ty##_##m_ty##_exporter( _##ty##_exporter, offsetof(ty, m_ty), #m_ty); \
-    extern "C" export void* _##ty##_##m_ty##_get(void *_object) { \
-       auto object = reinterpret_cast<ty*>(_object); \
-       return reinterpret_cast<void*>( _##ty##_##m_ty##_exporter.get(object)); \
-    }
+#define EXPORT_STRUCT_MEMBER(ty_name, m_ty) \
+    static StructMember<decltype(((decltype(_##ty_name##_exporter)::Ty*)(nullptr))->m_ty), decltype(_##ty_name##_exporter)::Ty> \
+        _##ty_name##_##m_ty##_exporter( _##ty_name##_exporter, offsetof(decltype(_##ty_name##_exporter)::Ty, m_ty), #m_ty);
+    // extern "C" export void* _##ty##_##m_ty##_get(void *_object) { \
+    //    auto object = reinterpret_cast<ty*>(_object); \
+    //    return reinterpret_cast<void*>( _##ty##_##m_ty##_exporter.get(object)); \
+    // }
+
+//decltype((decltype(_##ty_name##_exporter)::Ty)::m_ty)
     
-#define EXPORT_STRUCT_MEMBER(ty, m_ty) \
-    EXPORT_STRUCT_MEMBER_READONLY(ty, m_ty) \
-    extern "C" export void _##ty##_##m_ty##_set(void *_object, void *_arg) { \
-        auto object = reinterpret_cast<ty*>(_object); \
-        auto arg = reinterpret_cast< decltype(_##ty##_##m_ty##_exporter)::CType>(_arg); \
-        _##ty##_##m_ty##_exporter.set(object, arg); \
-    }
+//#define EXPORT_STRUCT_MEMBER(ty, m_ty) \
+//    EXPORT_STRUCT_MEMBER_READONLY(ty, m_ty)
+    // extern "C" export void _##ty##_##m_ty##_set(void *_object, void *_arg) { \
+    //     auto object = reinterpret_cast<ty*>(_object); \
+    //     auto arg = reinterpret_cast< decltype(_##ty##_##m_ty##_exporter)::CType>(_arg); \
+    //     _##ty##_##m_ty##_exporter.set(object, arg); \
+    // }
