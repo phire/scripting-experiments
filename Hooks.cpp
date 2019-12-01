@@ -155,6 +155,11 @@ export const char * list_hooks() {
     return fn_list.c_str();
 }
 
+export const char *get_schema() {
+    static std::string schema = generate_json_schema();
+    return schema.c_str();
+}
+
 export void register_hook(char * hook_name, void *callback, void *data) {
     std::string name(hook_name);
     for (auto &hook : all_hooks()) {

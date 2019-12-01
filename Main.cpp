@@ -40,9 +40,6 @@ int main() {
         return -1; 
     }
 
-    fmt::print("{}", generate_json_schema());
-    return 0;
-
     init_python();
 
     printf("Waiting:\n");
